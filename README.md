@@ -8,7 +8,7 @@ Learn anything deeply using the **Feynman Technique**: explain it simply, find t
 
 ![Dashboard](docs/01-dashboard.png)
 
-**AI evaluation** — 3-dimension scoring (语言简洁 / 核心机制 / 举例说明) with pass/fail, explanatory feedback, and one-click weak-point drill:
+**AI evaluation** — 3-dimension scoring (Clarity / Core mechanism / Examples) with pass/fail, explanatory feedback, and one-click weak-point drill:
 
 ![Review result](docs/03-review-result.png)
 
@@ -30,18 +30,18 @@ Learn anything deeply using the **Feynman Technique**: explain it simply, find t
 ### Spaced repetition review
 - **Configurable intervals** — Customize the three review intervals (default: 1 / 7 / 30 days) in Settings
 - **Three quality tiers** — Each review is scored by AI on three dimensions:
-  - All ✓ ("很熟练") → interval × 1.3 (longer)
+  - All ✓ ("Very familiar") → interval × 1.3 (longer)
   - Any △ (partial) → interval × 0.6 (shorter)
   - Fail → retry the next day
-- **3-dimension AI judgment** — Scored on 语言简洁 / 核心机制 / 举例说明 (✓ △ ✗)
+- **3-dimension AI judgment** — Scored on Clarity / Core mechanism / Examples (✓ △ ✗)
 - **Weak-point drill** — After a failed or partial review, click 🎯 to get AI-generated targeted questions for the exact weak dimensions, with per-question feedback
 - **Weak-point tracking** — Failed review dimensions are saved to the note and shown on the next review session
 - **Review sorting** — Sort due concepts by due date (most overdue first), mastery level, or name
 - **Batch review** — Review all due concepts in sequence with a progress bar; supports skip and exit
-- **"Review current note" command** — Trigger a review session directly from a due feynman note via the command palette
+- **"Review current note" command** — Trigger a review session directly from a due Feynman note via the command palette
 
 ### Mastery & analytics
-- **Four mastery levels** — 初识 → 理解 → 掌握 → 精通, advanced only on AI-evaluated pass
+- **Four mastery levels** — Novice → Developing → Proficient → Mastered, advanced only on AI-evaluated pass
 - **Review pass rate** — Per-concept and overall historical pass rate in the dashboard and concept browser
 - **Dashboard** — Streak, total concepts, due count, mastery distribution bar, activity heatmap, weekly report
 - **Concept browser** — Search and filter by mastery level with pass rates at a glance
@@ -82,7 +82,7 @@ Search for **Feynman Learning** in **Settings → Community Plugins → Browse**
    | **Model name** | Model to use | `deepseek-chat` |
    | **Temperature** | Response creativity, 0–1 | `0.8` |
    | **Review intervals** | Days for each review stage | `1 / 7 / 30` |
-   | **Notes folder** | Where learning notes are saved | `费曼笔记` |
+   | **Notes folder** | Where learning notes are saved | `Feynman Notes` |
    | **Index file** | Path to your concept index note | *(optional)* |
    | **Notion Token** | Notion integration secret | *(optional)* |
    | **Notion Database ID** | Target Notion database | *(optional)* |
@@ -107,7 +107,7 @@ Click the brain icon (🧠) in the left ribbon to open the Feynman Learning pane
 
 ### Learning a new concept
 
-1. **Step 1 — Select**: Enter the concept name and why you want to learn it. Or click **📄 从原文提取概念** to paste an article and let AI suggest concepts.
+1. **Step 1 — Select**: Enter the concept name and why you want to learn it. Or click **📄 Extract concepts from text** to paste an article and let AI suggest concepts.
 2. **Step 2 — Explain**: Write your explanation as if teaching a 12-year-old. The AI will ask follow-up questions to probe your understanding.
 3. **Step 3 — Gaps**: The AI identifies weak spots; you fill them in. AI verifies your final explanation covers each gap before you advance.
 4. **Step 4 — Simplify**: Refine your explanation and create an analogy. Optionally take an AI quiz or discover concept connections.
@@ -117,23 +117,23 @@ Click the brain icon (🧠) in the left ribbon to open the Feynman Learning pane
 
 Due concepts appear in the **Review** section of the dashboard. Sort them by due date, mastery level, or name using the tabs at the top of the section.
 
-- Click **开始复习 →** on any item to write your re-explanation and get AI scoring.
-- Click **🚀 批量复习** to cycle through all due concepts in sequence.
-- Use the command palette and search **"复习当前费曼笔记"** when a due note is open.
+- Click **Start review →** on any item to write your re-explanation and get AI scoring.
+- Click **🚀 Batch review** to cycle through all due concepts in sequence.
+- Use the command palette and search **"Review current Feynman note"** when a due note is open.
 
 Review intervals adjust dynamically based on AI scoring:
 
 | Result | Next interval |
 |--------|--------------|
-| All ✓ (很熟练) | base × 1.3 (longer) |
+| All ✓ (very familiar) | base × 1.3 (longer) |
 | Any △ (partial pass) | base × 0.6 (shorter) |
 | Fail | 1 day (retry) |
 
-Clicking **🎯 专项练习 / 🎯 强化弱点** opens an inline drill: the AI generates 2–3 targeted questions for the specific weak or partial dimensions. Submit answers for per-question feedback, or retry as many times as needed.
+Clicking **🎯 Focused practice / 🎯 Strengthen weak points** opens an inline drill: the AI generates 2–3 targeted questions for the specific weak or partial dimensions. Submit answers for per-question feedback, or retry as many times as needed.
 
 ### Weekly report
 
-Click **📊 生成本周报告** in the dashboard to generate a Markdown summary of the week: concepts learned, reviews completed, pass rate, streak, and an AI-written reflection.
+Click **📊 Generate this week’s report** in the dashboard to generate a Markdown summary of the week: concepts learned, reviews completed, pass rate, streak, and an AI-written reflection.
 
 ## Note format
 
@@ -141,16 +141,16 @@ Each session creates a Markdown file with YAML frontmatter:
 
 ```yaml
 ---
-tags: [费曼学习法]
-概念: "Newton's Laws"
-日期: "2025-01-01"
-掌握程度: "理解"
+tags: [Feynman Learning]
+Concept: "Newton's Laws"
+Date: "2025-01-01"
+Mastery: "Developing"
 review_date: "2025-01-08"
 review_count: 1
 ---
 ```
 
-Failed reviews append a `## 复习记录` section with dimension scores and evaluation so subsequent sessions have a clear target.
+Failed reviews append a `## Review log` section with dimension scores and evaluation so subsequent sessions have a clear target.
 
 ## Development
 

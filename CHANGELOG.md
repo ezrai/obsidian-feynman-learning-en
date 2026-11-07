@@ -1,22 +1,22 @@
 # Changelog
 
-All notable changes to **Feynman Learning** are documented here.
+All notable changes to Feynman Learning are documented here.
 
 ## [1.3.0] — 2026-05-08
 
 ### Added
 - **Notion field name mapping** — four core Notion property names (title, mastery, status, subject) are now configurable in Settings; default values preserve backward compatibility; error message on 400 now tells users to check field name alignment
-- **Settings export / import** — "数据管理" section in Settings lets users copy all settings to clipboard as JSON, then paste and merge on another device; import is sandboxed to known keys from DEFAULT_SETTINGS to prevent injection
-- **Batch review progress persistence** — batch state (`filePaths` + current index) is saved to disk via `savePendingBatch()`; if Obsidian closes mid-batch, a resume banner appears on the dashboard on next open; "放弃此次批量" clears the saved state
+- **Settings export / import** — the "Data management" section in Settings lets users copy all settings to clipboard as JSON, then paste and merge on another device; import is sandboxed to known keys from DEFAULT_SETTINGS to prevent injection
+- **Batch review progress persistence** — batch state (`filePaths` + current index) is saved to disk via `savePendingBatch()`; if Obsidian closes mid-batch, a resume banner appears on the dashboard on next open; "Discard this batch" clears the saved state
 
 ### Fixed
-- Notion sync error message now reads "请检查数据库字段名是否与插件设置一致" instead of a raw HTTP status when field names mismatch
+- Notion sync error message now reads "Please check whether the database field names match the plugin settings" instead of a raw HTTP status when field names mismatch
 
 ## [1.2.0] — 2026-05-08
 
 ### Added
 - **First-use onboarding card** — when no API key is configured, the panel shows a guided setup card with step-by-step instructions and an "Open Settings" button instead of an empty dashboard
-- **Notes folder self-check** — Settings now shows a live ✓/✗ status for the configured notes folder; a "一键创建" button appears when the folder is missing
+- **Notes folder self-check** — Settings now shows a live ✓/✗ status for the configured notes folder; a "Create now" button appears when the folder is missing
 - **Mobile & touch support** — `@media (pointer: coarse)` raises all buttons to 44 px minimum tap targets; `@media (max-width: 480px)` fixes iOS auto-zoom on inputs (font-size forced to 1 rem), reduces card padding, and stacks review/queue button rows on narrow screens
 
 ### Fixed
@@ -24,9 +24,9 @@ All notable changes to **Feynman Learning** are documented here.
 - **Settings "Open Settings" button on mobile** — gracefully falls back to a Notice with manual navigation instructions when Obsidian's private settings API is unavailable
 
 ### Changed
-- **`tags` frontmatter format** — new notes now write `tags` as a YAML block list (`tags:\n  - 费曼学习法`) instead of an inline flow sequence (`tags: [费曼学习法]`), which Obsidian's core tag system and Dataview both handle more reliably
+- **`tags` frontmatter format** — new notes now write `tags` as a YAML block list (`tags:\n  - Feynman Learning`) instead of an inline flow sequence (`tags: [Feynman Learning]`), which Obsidian's core tag system and Dataview both handle more reliably
 - **`getAllConcepts()` is now cached** — result is memoised and invalidated automatically via `vault.on('create'/'delete'/'rename')` and `metadataCache.on('changed')`; repeated calls within a render cycle no longer re-scan the vault
-- **Unified AI button error handling** — all AI-triggered buttons (`judgeBtn`, `summaryBtn`, `evalBtn`, `submitBtn`, `继续追问`) now go through a single `withAiBtn` helper that disables the button during the request, logs failures to `console.error`, and shows a `Notice`; a new `keepDisabledOnSuccess` option handles buttons whose post-success state differs from the default
+- **Unified AI button error handling** — all AI-triggered buttons (`judgeBtn`, `summaryBtn`, `evalBtn`, `submitBtn`, `continue asking`) now go through a single `withAiBtn` helper that disables the button during the request, logs failures to `console.error`, and shows a `Notice`; a new `keepDisabledOnSuccess` option handles buttons whose post-success state differs from the default
 
 ### Refactored
 - **`parseReviewVerdict()` and `parseExtractedConcepts()`** extracted from `main.ts` into `utils.ts` as pure functions; both use JSON-first parsing with regex/text fallback
@@ -38,12 +38,12 @@ All notable changes to **Feynman Learning** are documented here.
 - **Review sorting** — sort due list by due-date (most overdue first), mastery level, or concept name; overdue-days badge on each item
 - **Batch review mode** — 🚀 button (≥2 due) cycles through all due concepts with a X/N progress bar, skip, and exit; summary screen at the end
 - **Configurable review intervals** — three number inputs in Settings control the 1/7/30-day ladder; changes apply immediately to new notes and future reviews
-- **"Review current note" command** — available in the command palette when the active file is a due feynman note; auto-opens the review session
+- **"Review current note" command** — available in the command palette when the active file is a due Feynman note; auto-opens the review session
 
 ### Fixed
 - Batch review no longer skips items: the due-concept list is frozen as a snapshot when batch starts, so `markReviewed()` shrinking the live list doesn't cause index drift
 - New notes now use the user-configured initial review interval (index 0 of `reviewIntervals`) instead of the hardcoded constant
-- Settings labels clarified: "保存→首次复习 / 首次通过→二次复习 / 二次通过→三次复习" reflects actual algorithm semantics
+- Settings labels clarified: "Save → first review / first pass → second review / second pass → third review" reflects actual algorithm semantics
 
 ### Changed
 - `calcNextInterval()` accepts an optional `intervals` parameter (backward-compatible); all callers pass the live settings value
@@ -78,6 +78,7 @@ All notable changes to **Feynman Learning** are documented here.
 - **GitHub Actions auto-release** — push a semver tag (e.g. `1.0.6`) to trigger CI build and GitHub Release creation
 
 ## [1.0.5] — 2026-04-10
+
 
 ### Added
 - **Expert-pass multiplier** — reviews where all three dimensions score ✓ ("很熟练") advance the next interval by ×1.3

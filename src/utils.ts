@@ -20,7 +20,7 @@ export interface ExtractedConcept {
 // ─── Domain constants ────────────────────────────────────────────────────────
 
 export const REVIEW_INTERVALS = [1, 7, 30];
-export const MASTERY_LEVELS = ["初识", "理解", "掌握", "精通"];
+export const MASTERY_LEVELS = ["Novice", "Developing", "Proficient", "Mastered"];
 
 // ─── Pure utility functions ───────────────────────────────────────────────────
 
@@ -36,21 +36,21 @@ export function yamlStr(value: string): string {
 }
 
 export function truncate(text: string, max = 1900): string {
-  return text.length > max ? text.slice(0, max) + "…（已截断）" : text;
+  return text.length > max ? text.slice(0, max) + "… (truncated)" : text;
 }
 
 export function parseApiError(status: number, body: Record<string, unknown>): string {
   const errObj = body?.error as Record<string, unknown> | undefined;
   const rawMsg = errObj?.message ?? body?.message;
   const msg: string = typeof rawMsg === "string" ? rawMsg : "";
-  if (status === 401) return "API Key 无效或已过期，请检查设置中的 Key";
-  if (status === 403) return "无权限访问该模型，请检查 Key 或模型名称";
-  if (status === 404) return "接口地址或模型不存在，请检查 API Base URL 和模型名称";
-  if (status === 429) return "请求过于频繁或余额不足，请稍后再试";
-  if (status >= 500)  return "AI 服务暂时不可用，请稍后再试";
-  if (/model/.test(msg))                              return `模型不存在或无权限：${msg}`;
-  if (/quota|balance|insufficient|credit/.test(msg)) return `余额不足：${msg}`;
-  return msg || `请求失败（HTTP ${status}）`;
+  if (status === 401) return "API key is invalid or expired; check the key in settings";
+  if (status === 403) return "No permission for this model; check the key or model name";
+  if (status === 404) return "API base URL or model does not exist; check the endpoint and model name";
+  if (status === 429) return "Request limit reached or quota exhausted; please try again later";
+  if (status >= 500) return "AI service is temporarily unavailable; please try again later";
+  if (/model/.test(msg)) return `Model does not exist or access is forbidden: ${msg}`;
+  if (/quota|balance|insufficient|credit/.test(msg)) return `Insufficient quota: ${msg}`;
+  return msg || `Request failed (HTTP ${status})`;
 }
 
 // ─── AI response parsers ──────────────────────────────────────────────────────
@@ -77,15 +77,20 @@ export function parseReviewVerdict(text: string): ReviewVerdict {
       }
     } catch { /* fall through */ }
   }
-  // Fallback: regex parsing
   console.warn("[feynman] parseReviewVerdict: no valid JSON, falling back to regex");
-  const passed = text.includes("判定：通过");
+  const passed = text.includes("Verdict: Pass") || text.includes("判定：通过");
   const dimensions: ReviewDimension[] = [];
-  for (const label of ["语言简洁", "核心机制", "举例说明"] as const) {
-    const m = text.match(new RegExp(`${label}：([✓△✗])(.*)`, "m"));
+  for (const label of ["Clarity", "Core mechanism", "Examples"] as const) {
+    const m = text.match(new RegExp(`${label}[:：]([✓△✗])(.*)`, "m"));
     if (m) dimensions.push({ label, score: m[1] as "✓" | "△" | "✗", note: m[2].trim() });
   }
-  const feedback = text.match(/评价：([\s\S]*)/)?.[1]?.trim() ?? "";
+  if (dimensions.length === 0) {
+    for (const label of ["语言简洁", "核心机制", "举例说明"] as const) {
+      const m = text.match(new RegExp(`${label}：([✓△✗])(.*)`, "m"));
+      if (m) dimensions.push({ label, score: m[1] as "✓" | "△" | "✗", note: m[2].trim() });
+    }
+  }
+  const feedback = text.match(/Feedback[:：]([\s\S]*)/)?.[1]?.trim() ?? text.match(/评价：([\s\S]*)/)?.[1]?.trim() ?? "";
   return { passed, dimensions, feedback };
 }
 
@@ -113,10 +118,10 @@ export function parseExtractedConcepts(text: string): ExtractedConcept[] {
     .split("\n")
     .filter(l => l.trim())
     .map(l => {
-      const m = l.match(/「(.+?)」[—\-–]\s*(.*)/);
+      const m = l.match(/「(.+?)」[—\-–]\s*(.*)/) || l.match(/"(.+?)"\s*[-—–:]\s*(.*)/);
       return m
         ? { name: m[1].trim(), reason: m[2].trim() }
-        : { name: l.replace(/「|」/g, "").trim(), reason: "" };
+        : { name: l.replace(/「|」|"/g, "").trim(), reason: "" };
     })
     .filter(c => c.name.length > 0)
     .slice(0, 8);
@@ -139,10 +144,10 @@ export function calcNextInterval(
   expertPass: boolean,
   intervals: readonly number[] = REVIEW_INTERVALS,
 ): number | null {
-  if (!passed) return 1;                                    // retry tomorrow
+  if (!passed) return 1;
   const raw: number | null = intervals[reviewCount + 1] ?? null;
-  if (raw === null) return null;                            // fully mastered
-  if (expertPass)   return Math.round(raw * 1.3);
-  if (partialPass)  return Math.max(1, Math.round(raw * 0.6));
+  if (raw === null) return null;
+  if (expertPass) return Math.round(raw * 1.3);
+  if (partialPass) return Math.max(1, Math.round(raw * 0.6));
   return raw;
 }

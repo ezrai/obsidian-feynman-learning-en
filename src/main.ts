@@ -25,7 +25,7 @@ import {
 
 const VIEW_TYPE = "feynman-learning-view";
 const MASTERY_COLORS: Record<string, string> = {
-  "初识": "#aaa", "理解": "#e07b39", "掌握": "#1a6fa8", "精通": "#2d6a4f",
+  "Novice": "#aaa", "Developing": "#e07b39", "Proficient": "#1a6fa8", "Mastered": "#2d6a4f",
 };
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -52,14 +52,14 @@ const DEFAULT_SETTINGS: FeynmanSettings = {
   apiBase: "https://api.deepseek.com/v1",
   model: "deepseek-chat",
   temperature: 0.8,
-  notesFolder: "01.读书笔记/费曼笔记",
-  indexFile: "01.读书笔记/费曼学习索引.md",
+  notesFolder: "01.Study Notes/Feynman Notes",
+  indexFile: "01.Study Notes/Feynman Learning Index.md",
   notionToken: "",
   notionDatabaseId: "",
-  notionPropTitle:   "概念名称",
-  notionPropMastery: "掌握程度",
-  notionPropStatus:  "状态",
-  notionPropSubject: "学科领域",
+  notionPropTitle:   "Concept name",
+  notionPropMastery: "Mastery",
+  notionPropStatus:  "Status",
+  notionPropSubject: "Subject",
   reviewIntervals: [1, 7, 30],
 };
 
@@ -100,7 +100,7 @@ class FeynmanView extends ItemView {
   private state: FeynmanState = emptyState();
   private browsing = false;
   private browseSearch = "";
-  private browseFilter = "全部";
+  private browseFilter = "All";
   private reviewSort: "due" | "mastery" | "name" = "due";
   private batchMode = false;
   private batchIndex = 0;
@@ -112,7 +112,7 @@ class FeynmanView extends ItemView {
   }
 
   getViewType() { return VIEW_TYPE; }
-  getDisplayText() { return "费曼学习法"; }
+  getDisplayText() { return "Feynman Learning"; }
   getIcon() { return "brain"; }
 
   onOpen() { this.render(); }
@@ -142,7 +142,7 @@ class FeynmanView extends ItemView {
   }
 
   private renderProgress(parent: HTMLElement) {
-    const steps = ["首页", "简单解释", "找出漏洞", "简化类比", "总结", "测验"];
+    const steps = ["Home", "Simple explanation", "Find gaps", "Simplify & analogize", "Summary", "Quiz"];
     const wrap = parent.createDiv("feynman-progress");
     const labels = wrap.createDiv("feynman-progress-labels");
     steps.forEach((s, i) => {
@@ -182,7 +182,7 @@ class FeynmanView extends ItemView {
    * Disables the button and shows loadingText while fn() runs.
    * On error: logs to console + shows Notice (unless silent=true), then restores button.
    * On success: restores button unless keepDisabledOnSuccess=true, which lets fn() set
-   *   its own post-success label/state before returning (e.g. "再练一次" or stay disabled).
+   *   its own post-success label/state before returning (e.g. "Practice again" or stay disabled).
    */
   private async withAiBtn(
     btn: HTMLButtonElement,
@@ -198,8 +198,8 @@ class FeynmanView extends ItemView {
       await fn();
       succeeded = true;
     } catch (e) {
-      console.error("费曼插件 AI 请求失败", e);
-      if (!silent) new Notice("AI 请求失败：" + (e instanceof Error ? e.message : String(e)));
+      console.error("Feynman plugin AI request failed", e);
+      if (!silent) new Notice("AI request failed: " + (e instanceof Error ? e.message : String(e)));
     } finally {
       if (!keepDisabledOnSuccess || !succeeded) {
         btn.disabled = false;
@@ -241,10 +241,10 @@ class FeynmanView extends ItemView {
     const banner = parent.createDiv("feynman-card feynman-resume-banner");
     banner.createDiv({
       cls: "feynman-resume-text",
-      text: `📚 上次批量复习中断在第 ${pb.index + 1} / ${pb.filePaths.length} 个，要继续吗？`,
+      text: `📚 Your last batch review stopped at item ${pb.index + 1} / ${pb.filePaths.length}. Resume?`,
     });
     const row = this.btnRow(banner);
-    this.btn(row, "继续复习 →", "primary", () => {
+    this.btn(row, "Continue review →", "primary", () => {
       // Rebuild DueConcept from stored file paths; skip missing/deleted files
       const queue: DueConcept[] = pb.filePaths.flatMap(path => {
         const file = this.app.vault.getAbstractFileByPath(path);
@@ -263,7 +263,7 @@ class FeynmanView extends ItemView {
       this.batchMode = true;
       this.render();
     });
-    this.btn(row, "放弃此次批量", "secondary", async () => {
+    this.btn(row, "Discard this batch", "secondary", async () => {
       await this.plugin.clearPendingBatch();
       this.render();
     });
@@ -273,20 +273,20 @@ class FeynmanView extends ItemView {
     const card = parent.createDiv("feynman-card feynman-onboarding");
 
     card.createDiv({ cls: "feynman-onboarding-icon", text: "🧠" });
-    card.createDiv({ cls: "feynman-onboarding-title", text: "欢迎使用费曼学习法！" });
-    card.createEl("p", { cls: "feynman-onboarding-desc", text: "用「教会别人」的方式深度学习任何概念，AI 帮你找漏洞、做复习。" });
+    card.createDiv({ cls: "feynman-onboarding-title", text: "Welcome to Feynman Learning!" });
+    card.createEl("p", { cls: "feynman-onboarding-desc", text: "Learn any concept by teaching it simply, then let AI identify gaps and help you review." });
 
-    card.createEl("p", { cls: "feynman-settings-desc", text: "开始之前，先完成一次性配置：" });
+    card.createEl("p", { cls: "feynman-settings-desc", text: "Before you begin, complete this one-time setup:" });
     const steps = card.createEl("ol", { cls: "feynman-onboarding-steps" });
     [
-      "打开 设置 → 社区插件 → 费曼学习法",
-      "填写 API key（推荐 DeepSeek，性价比高；也支持 OpenAI / 本地 Ollama 等）",
-      "点击「测试连接」确认配置正确",
-      "回到这里，输入第一个你想学习的概念！",
+      "Open Settings → Community Plugins → Feynman Learning",
+      "Enter your API key (DeepSeek is recommended, but OpenAI / local Ollama also work)",
+      "Click \"Test connection\" to confirm the setup is correct",
+      "Return here and enter your first concept to learn!",
     ].forEach(text => steps.createEl("li", { text }));
 
     const btnRow = this.btnRow(card);
-    this.btn(btnRow, "⚙️ 打开设置", "primary", () => {
+    this.btn(btnRow, "⚙️ Open settings", "primary", () => {
       // Access the internal settings manager (undocumented private API, may not exist on mobile)
       const appSetting = (this.app as unknown as { setting?: { open?: () => void; openTabById?: (id: string) => void } }).setting;
       if (appSetting?.open) {
@@ -294,25 +294,25 @@ class FeynmanView extends ItemView {
         appSetting.openTabById?.("feynman-learning");
       } else {
         // Mobile Obsidian: private API unavailable — guide the user manually
-        new Notice("请前往 设置 → 社区插件 → 费曼学习法 完成配置");
+        new Notice("Please go to Settings → Community Plugins → Feynman Learning to finish setup");
       }
     });
 
-    card.createEl("p", { cls: "feynman-onboarding-hint", text: "配置完成后，刷新此面板（点击左侧 🧠 图标）即可开始学习。" });
+    card.createEl("p", { cls: "feynman-onboarding-hint", text: "After setup, refresh this panel (click the left-side 🧠 icon) and start learning." });
   }
 
   private renderDashboard(parent: HTMLElement) {
     const stats = this.plugin.getStats();
     const card = parent.createDiv("feynman-card feynman-dashboard");
-    card.createEl("h3", { cls: "feynman-dashboard-title", text: "学习概览" });
+    card.createEl("h3", { cls: "feynman-dashboard-title", text: "Learning overview" });
 
     const reviewStats = this.plugin.getOverallReviewStats();
     const grid = card.createDiv("feynman-stat-grid");
     for (const { label, value, sub } of [
-      { label: "已学概念", value: stats.total, sub: `本周 +${stats.thisWeek}` },
-      { label: "待复习", value: stats.dueCount, sub: "" },
-      { label: "连续学习", value: stats.streak + " 天", sub: "" },
-      { label: "复习通过率", value: reviewStats.rate, sub: reviewStats.total > 0 ? `${reviewStats.passed}/${reviewStats.total} 次` : "暂无记录" },
+      { label: "Concepts learned", value: stats.total, sub: `This week +${stats.thisWeek}` },
+      { label: "Due for review", value: stats.dueCount, sub: "" },
+      { label: "Learning streak", value: stats.streak + " days", sub: "" },
+      { label: "Review pass rate", value: reviewStats.rate, sub: reviewStats.total > 0 ? `${reviewStats.passed}/${reviewStats.total} attempts` : "No records yet" },
     ]) {
       const cell = grid.createDiv("feynman-stat-cell");
       cell.createDiv({ cls: "feynman-stat-value", text: String(value) });

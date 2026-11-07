@@ -12,24 +12,19 @@ describe("calcNextInterval", () => {
   });
 
   test("normal pass returns the next interval", () => {
-    // count=0 → next slot is index 1 → 7 days
     expect(calcNextInterval(0, true, false, false)).toBe(REVIEW_INTERVALS[1]);
-    // count=1 → next slot is index 2 → 30 days
     expect(calcNextInterval(1, true, false, false)).toBe(REVIEW_INTERVALS[2]);
   });
 
   test("expert pass applies ×1.3 multiplier", () => {
-    // count=0, next raw=7 → Math.round(7×1.3)=9
     expect(calcNextInterval(0, true, false, true)).toBe(Math.round(7 * 1.3));
   });
 
   test("partial pass applies ×0.6 multiplier", () => {
-    // count=0, next raw=7 → Math.max(1, Math.round(7×0.6))=4
     expect(calcNextInterval(0, true, true, false)).toBe(Math.max(1, Math.round(7 * 0.6)));
   });
 
   test("returns null when fully mastered (no more intervals)", () => {
-    // count=2 is the last valid entry; count=3 → beyond array → null
     expect(calcNextInterval(2, true, false, false)).toBeNull();
   });
 });
@@ -38,25 +33,25 @@ describe("calcNextInterval", () => {
 
 describe("parseApiError", () => {
   test("401 returns key error message", () => {
-    expect(parseApiError(401, {})).toContain("API Key");
+    expect(parseApiError(401, {})).toContain("API key");
   });
 
   test("404 returns endpoint error message", () => {
-    expect(parseApiError(404, {})).toContain("接口地址");
+    expect(parseApiError(404, {})).toContain("endpoint");
   });
 
   test("429 returns rate limit message", () => {
-    expect(parseApiError(429, {})).toContain("频繁");
+    expect(parseApiError(429, {})).toContain("limit");
   });
 
   test("500+ returns service unavailable", () => {
-    expect(parseApiError(500, {})).toContain("不可用");
-    expect(parseApiError(503, {})).toContain("不可用");
+    expect(parseApiError(500, {})).toContain("temporarily unavailable");
+    expect(parseApiError(503, {})).toContain("temporarily unavailable");
   });
 
   test("quota message in body triggers balance error", () => {
     const result = parseApiError(400, { error: { message: "insufficient quota" } });
-    expect(result).toContain("余额不足");
+    expect(result).toContain("Insufficient quota");
   });
 
   test("unknown error falls back to HTTP status", () => {
@@ -122,19 +117,19 @@ describe("parseReviewVerdict", () => {
   const validJson = JSON.stringify({
     passed: true,
     dimensions: [
-      { label: "语言简洁", score: "✓", note: "表达清晰" },
-      { label: "核心机制", score: "△", note: "缺少细节" },
-      { label: "举例说明", score: "✓", note: "例子恰当" },
+      { label: "Clarity", score: "✓", note: "Clear expression" },
+      { label: "Core mechanism", score: "△", note: "Missing detail" },
+      { label: "Examples", score: "✓", note: "Good example" },
     ],
-    feedback: "整体不错",
+    feedback: "Overall solid",
   });
 
   test("parses clean JSON correctly", () => {
     const result = parseReviewVerdict(validJson);
     expect(result.passed).toBe(true);
     expect(result.dimensions).toHaveLength(3);
-    expect(result.dimensions[0]).toEqual({ label: "语言简洁", score: "✓", note: "表达清晰" });
-    expect(result.feedback).toBe("整体不错");
+    expect(result.dimensions[0]).toEqual({ label: "Clarity", score: "✓", note: "Clear expression" });
+    expect(result.feedback).toBe("Overall solid");
   });
 
   test("parses JSON wrapped in markdown fences", () => {
@@ -147,7 +142,7 @@ describe("parseReviewVerdict", () => {
   test("invalid score value defaults to ✗", () => {
     const bad = JSON.stringify({
       passed: false,
-      dimensions: [{ label: "语言简洁", score: "INVALID", note: "" }],
+      dimensions: [{ label: "Clarity", score: "INVALID", note: "" }],
       feedback: "",
     });
     const result = parseReviewVerdict(bad);
@@ -155,19 +150,19 @@ describe("parseReviewVerdict", () => {
   });
 
   test("falls back to regex parsing when no valid JSON", () => {
-    const text = "判定：通过\n语言简洁：✓ 不错\n核心机制：△ 需加强\n举例说明：✓ 好\n评价：总体良好";
+    const text = "Verdict: Pass\nClarity: ✓ good\nCore mechanism: △ needs more detail\nExamples: ✓ good\nFeedback: Strong overall";
     const result = parseReviewVerdict(text);
     expect(result.passed).toBe(true);
-    expect(result.dimensions.find(d => d.label === "语言简洁")?.score).toBe("✓");
-    expect(result.dimensions.find(d => d.label === "核心机制")?.score).toBe("△");
-    expect(result.feedback).toBe("总体良好");
+    expect(result.dimensions.find(d => d.label === "Clarity")?.score).toBe("✓");
+    expect(result.dimensions.find(d => d.label === "Core mechanism")?.score).toBe("△");
+    expect(result.feedback).toBe("Strong overall");
   });
 
   test("regex fallback: fail verdict", () => {
-    const text = "判定：未通过\n核心机制：✗ 解释不到位\n评价：继续努力";
+    const text = "Verdict: Fail\nCore mechanism: ✗ explanation weak\nFeedback: Keep practicing";
     const result = parseReviewVerdict(text);
     expect(result.passed).toBe(false);
-    expect(result.dimensions.find(d => d.label === "核心机制")?.score).toBe("✗");
+    expect(result.dimensions.find(d => d.label === "Core mechanism")?.score).toBe("✗");
   });
 });
 
@@ -179,44 +174,42 @@ describe("parseExtractedConcepts", () => {
   afterEach(() => { warnSpy.mockRestore(); });
 
   const validArr = JSON.stringify([
-    { name: "复利", reason: "核心财务概念" },
-    { name: "边际效用", reason: "经济学基础" },
+    { name: "Compound interest", reason: "Core financial concept" },
+    { name: "Marginal utility", reason: "Economics foundation" },
   ]);
 
   test("parses clean JSON array correctly", () => {
     const result = parseExtractedConcepts(validArr);
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({ name: "复利", reason: "核心财务概念" });
+    expect(result[0]).toEqual({ name: "Compound interest", reason: "Core financial concept" });
   });
 
   test("parses JSON array wrapped in markdown fences", () => {
     const fenced = "```json\n" + validArr + "\n```";
     const result = parseExtractedConcepts(fenced);
     expect(result).toHaveLength(2);
-    expect(result[1].name).toBe("边际效用");
+    expect(result[1].name).toBe("Marginal utility");
   });
 
   test("filters out items without a name", () => {
-    const arr = JSON.stringify([{ reason: "no name here" }, { name: "保留", reason: "" }]);
+    const arr = JSON.stringify([{ reason: "no name here" }, { name: "Keep", reason: "" }]);
     const result = parseExtractedConcepts(arr);
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe("保留");
+    expect(result[0].name).toBe("Keep");
   });
 
   test("caps at 8 items", () => {
-    const arr = JSON.stringify(
-      Array.from({ length: 12 }, (_, i) => ({ name: `概念${i}`, reason: "" }))
-    );
+    const arr = JSON.stringify(Array.from({ length: 12 }, (_, i) => ({ name: `Concept ${i}`, reason: "" })));
     const result = parseExtractedConcepts(arr);
     expect(result).toHaveLength(8);
   });
 
-  test("falls back to text parsing with 「」 format", () => {
-    const text = "「复利」— 利滚利\n「边际效用」— 递减规律";
+  test("falls back to text parsing with quoted format", () => {
+    const text = '"Compound interest" - interest on interest\n"Marginal utility" - diminishing returns';
     const result = parseExtractedConcepts(text);
     expect(result).toHaveLength(2);
-    expect(result[0].name).toBe("复利");
-    expect(result[0].reason).toBe("利滚利");
+    expect(result[0].name).toBe("Compound interest");
+    expect(result[0].reason).toBe("interest on interest");
   });
 
   test("text fallback: plain lines without 「」", () => {
